@@ -12,6 +12,15 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+**Create `figures` Folder, if it doesn't exist:** 
+
+```{r}
+# Create 'figures' directory if it doesn't exist
+if (!dir.exists("figures")) {
+  dir.create("figures")
+}
+```
+
 # Data Processing
 
 ## Load Data
@@ -53,7 +62,8 @@ str(data)
 > - Properly formatted and ready for visualization and statistical
 > analysis.
 
-<br> <br>
+<br> 
+<br>
 
 ## Descriptive Statistics
 
@@ -94,28 +104,49 @@ summary_stats
 > - COVID-19 death rates are low but vary slightly more than vaccination
 > rates.
 
-<br> <br>
+<br> 
+<br>
 
 # Data Visualization
 
 ## Distribution of Public Health Metrics
 
 ```{r}
-ggplot(data, aes(x = covid_vax_rate)) +
+# COVID-19 Vaccination Rates Distribution
+vax_dist <- ggplot(data, aes(x = covid_vax_rate)) +
   geom_histogram(binwidth = 0.05, fill = "blue", alpha = 0.7) +
   theme_minimal() +
   labs(title = "Distribution of COVID-19 Vaccination Rates", x = "Vaccination Rate", y = "Frequency")
 
-ggplot(data, aes(x = covid_death_rate)) +
+# Display plot inline
+vax_dist
+
+# save figures
+ggsave("figures/vax_rate_dist.png", plot = vax_dist, width = 8, height = 6)
+
+# COVID-19 Death Rates Distribution
+death_dist <- ggplot(data, aes(x = covid_death_rate)) +
   geom_histogram(binwidth = 0.001, fill = "red", alpha = 0.7) +
   theme_minimal() +
   labs(title = "Distribution of COVID-19 Death Rates", x = "Death Rate", y = "Frequency")
 
-ggplot(data, aes(x = percent_uninsured)) +
+# Display plot inline
+death_dist
+
+# save figures
+ggsave("figures/death_rate_dist.png", plot = death_dist, width = 8, height = 6)
+
+# Percent Uninsured Distribution
+uninsured_dist <- ggplot(data, aes(x = percent_uninsured)) +
   geom_histogram(binwidth = 0.01, fill = "green", alpha = 0.7) +
   theme_minimal() +
   labs(title = "Distribution of Percent Uninsured", x = "Percent Uninsured", y = "Frequency")
 
+# Display plot inline
+uninsured_dist
+
+# save figures
+ggsave("figures/uninsured_dist.png", plot = uninsured_dist, width = 8, height = 6)
 ```
 
 ### Key Observations:
@@ -143,29 +174,53 @@ ggplot(data, aes(x = percent_uninsured)) +
 > -   These outliers might represent districts with limited access to
 >     affordable healthcare or high poverty rates.
 
-<br> <br>
+<br> 
+<br>
 
 ## Scatter Plots of Public Health Metrics vs. Housing Risk Scores
 
 ```{r}
-ggplot(data, aes(x = covid_vax_rate, y = total_risk_score)) +
+# Inspect column names
+colnames(data)
+
+# Vaccination Rate vs. Risk Score
+vax_vs_risk <- ggplot(data, aes(x = covid_vax_rate, y = total_risk_score)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", col = "blue") +
   theme_minimal() +
   labs(title = "Vaccination Rate vs Risk Score", x = "Vaccination Rate", y = "Normalized Risk Score")
 
-ggplot(data, aes(x = covid_death_rate, y = total_risk_score)) +
+# Display plot inline
+vax_vs_risk
+
+# save figures
+ggsave("figures/vax_vs_risk.png", plot = vax_vs_risk, width = 8, height = 6)
+
+# Death Rate vs. Risk Score
+death_vs_risk <- ggplot(data, aes(x = covid_death_rate, y = total_risk_score)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", col = "red") +
   theme_minimal() +
   labs(title = "Death Rate vs Risk Score", x = "Death Rate", y = "Normalized Risk Score")
 
-ggplot(data, aes(x = percent_uninsured, y = total_risk_score)) +
+# Display plot inline
+death_vs_risk
+
+# save figures
+ggsave("figures/death_vs_risk.png", plot = death_vs_risk, width = 8, height = 6)
+
+# Percent Uninsured vs. Risk Score
+uninsured_vs_risk <- ggplot(data, aes(x = percent_uninsured, y = total_risk_score)) +
   geom_point(alpha = 0.6) +
   geom_smooth(method = "lm", col = "green") +
   theme_minimal() +
   labs(title = "Percent Uninsured vs Risk Score", x = "Percent Uninsured", y = "Normalized Risk Score")
 
+# Display plot inline
+uninsured_vs_risk
+
+# save figures
+ggsave("figures/uninsured_vs_risk.png", plot = uninsured_vs_risk, width = 8, height = 6)
 ```
 
 ### Key Observations:
@@ -194,6 +249,9 @@ ggplot(data, aes(x = percent_uninsured, y = total_risk_score)) +
 >     is associated with increased housing risk scores. This reinforces
 >     the idea that lack of insurance is linked to vulnerability and
 >     poor living conditions.
+
+<br>
+<br>
 
 # Hypothesis Testing
 
@@ -244,11 +302,211 @@ t_test_vax
 
 ### Interpretation:
 
-> -   Districts with higher vaccination rates have significantly lower
->     housing risk scores than those with lower vaccination rates.\
+>   
+  -   Districts with higher vaccination rates have significantly lower
+>     housing risk scores than those with lower vaccination rates.
 > -   This suggests that higher vaccination coverage might be associated
 >     with improved overall resilience and public health infrastructure,
 >     reducing housing-related vulnerabilities.
+
+<br>
+<br>
+
+## Correlation Matrix Heatmap
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+original_colnames <- colnames(data)
+
+# Step 1: Compute correlation matrix and reshape
+cor_matrix <- data %>%
+  select(where(is.numeric)) %>%
+  cor(method = "pearson", use = "pairwise.complete.obs")
+
+cor_data <- as.data.frame(as.table(cor_matrix)) %>%
+  rename(Var1 = Var1, Var2 = Var2, Correlation = Freq) %>%
+  filter(Var1 != Var2)  # Remove diagonal (self-correlations)
+
+# Debugging: Check the structure and head of `cor_data`
+str(cor_data)
+head(cor_data)
+
+# Step 2: Filter for correlations > 0.5 (absolute value)
+cor_data_filtered <- cor_data %>% filter(abs(Correlation) > 0.5)
+
+# Debugging: Ensure filtered data is not empty
+if (nrow(cor_data_filtered) == 0) {
+  stop("No correlations exceed the threshold of 0.5.")
+}
+
+# Step 3: Create a ggplot heatmap
+heatmap <- ggplot(cor_data, aes(x = Var1, y = Var2, fill = Correlation)) +
+  geom_tile() +
+  geom_text(aes(label = sprintf("%.2f", Correlation)), size = 2.5) + # Ensure two decimals
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1, 1), space = "Lab") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8), # Adjust font size and angle
+    axis.text.y = element_text(size = 8),
+    plot.title = element_text(size = 14, hjust = 0.5),
+    plot.subtitle = element_text(size = 10)
+  ) +
+  labs(
+    title = "Correlation Heatmap of Public Health Metrics",
+    subtitle = "Pearson Method, Pairwise Complete Observations",
+    x = "Variables",
+    y = "Variables",
+    fill = "Correlation"
+  )
+
+# Save the updated plot
+ggsave("figures/consistent_decimal_correlation_heatmap.png", plot = heatmap, width = 10, height = 8)
+
+
+# Display the heatmap inline
+heatmap
+
+```
+
+
+### Key Insights from the Heatmap:  
+
+> **Strong Positive Correlations:**  
+  -  **Limited English Proficiency vs. Rent Burden ($r≈0.66$):** Higher language barriers correlate with higher rent burdens.  
+  -  **Crowding vs. Limited English Proficiency ($r≈0.69$):** Crowding is linked to areas with more limited English speakers.  
+  -  **Housing Violations vs. Tenant Cases ($r≈0.78$):** Poor housing quality strongly correlates with tenant disputes.  
+<br>
+**Strong Negative Correlations:**  
+  -  **Rent Burden vs. COVID Death Rate ($r≈−0.67$):** Higher rent burden correlates with lower COVID death rates, potentially reflecting urban healthcare access.  
+  -  **Crowding vs. Rent Burden ($r≈−0.73$):** Crowding is more prevalent in lower-rent areas.  
+<br>
+**Moderate Trends:**  
+  -  **Vaccination Rate vs. Risk Score ($r≈−0.38$):** Higher vaccination rates weakly correlate with lower risk scores.  
+  -  **People of Color vs. Limited English Proficiency ($r≈0.56$):** Communities of color often overlap with linguistically diverse areas.  
+<br>
+**Weak or Non-Significant Correlations:**  
+Variables like vaccination rates and eviction filings ($r≈−0.07$) show minimal connection, though this could be due to the limited data available in our initial research.  
+
+<br>
+<br>
+
+## Bar Chart for Borough-Level Risk Scores
+
+```{r}
+# Inspect column names
+colnames(data)
+
+```
+
+```{r}
+library(stringr)
+library(ggplot2)
+
+# Check if 'district' column exists
+if (!"district" %in% colnames(data)) {
+  stop("The 'district' column is not found in the dataset.")
+}
+
+# Group Data by Borough
+borough_comparison <- data %>%
+  mutate(borough = str_extract(district, "^[A-Z]+")) %>%
+  group_by(borough) %>%
+  summarise(
+    avg_risk_score = mean(total_risk_score, na.rm = TRUE),
+    avg_vax_rate = mean(covid_vax_rate, na.rm = TRUE),
+    avg_death_rate = mean(covid_death_rate, na.rm = TRUE),
+    avg_uninsured = mean(percent_uninsured, na.rm = TRUE)
+  ) %>%
+  arrange(desc(avg_risk_score))
+
+# Ensure 'figures' directory exists
+if (!dir.exists("figures")) {
+  dir.create("figures")
+}
+
+# Bar Chart for Average Risk Scores
+borough_risk_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_risk_score), y = avg_risk_score, fill = avg_risk_score)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Average Risk Scores by Borough", x = "Borough", y = "Average Risk Score") +
+  coord_flip()
+
+# Save the plot
+ggsave("figures/borough_risk_scores.png", plot = borough_risk_plot, width = 8, height = 6)
+
+# Display the plot inline
+borough_risk_plot
+
+# Additional Visualizations: Vaccination Rate by Borough
+borough_vax_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_vax_rate), y = avg_vax_rate, fill = avg_vax_rate)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Average Vaccination Rates by Borough", x = "Borough", y = "Average Vaccination Rate") +
+  coord_flip()
+
+# Save the vaccination rate plot
+ggsave("figures/borough_vaccination_rates.png", plot = borough_vax_plot, width = 8, height = 6)
+
+# Display plot inline
+borough_vax_plot
+
+# Additional Visualizations: Death Rate by Borough
+borough_death_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_death_rate), y = avg_death_rate, fill = avg_death_rate)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Average Death Rates by Borough", x = "Borough", y = "Average Death Rate") +
+  coord_flip()
+
+# Save the death rate plot
+ggsave("figures/borough_death_rates.png", plot = borough_death_plot, width = 8, height = 6)
+
+# Display plot inline
+borough_death_plot
+
+# Additional Visualizations: Uninsured Percent by Borough
+borough_uninsured_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_uninsured), y = avg_uninsured, fill = avg_uninsured)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Average Uninsured Percent by Borough", x = "Borough", y = "Average Uninsured Percent") +
+  coord_flip()
+
+# Save the uninsured percent plot
+ggsave("figures/borough_uninsured_percent.png", plot = borough_uninsured_plot, width = 8, height = 6)
+
+# Display plot inline
+borough_uninsured_plot
+
+```
+
+### Interpretation:  
+
+>  1.  **Average Risk Scores by Borough**  
+    -  **Observation:** The Bronx (BX) has the highest average risk score, followed by Brooklyn (BK), Queens (QN), Manhattan (MN), and Staten Island (SI).  
+    -  **Implication:** The Bronx may have higher vulnerability related to housing and health risks compared to other boroughs. Staten Island shows the lowest risk, indicating better conditions or fewer vulnerabilities.  
+  2.  **Average Vaccination Rates by Borough**  
+    -  **Observation:** Manhattan (MN) has the highest average COVID-19 vaccination rates, while the Bronx (BX) and Brooklyn (BK) have the lowest.  
+    -  **Implication:** Higher vaccination rates in Manhattan may correlate with better healthcare access and infrastructure. Lower rates in the Bronx and Brooklyn suggest potential public health disparities or vaccine hesitancy.  
+  3.  **Average Death Rates by Borough**   
+    -  **Observation:** The Bronx (BX) and Queens (QN) show the highest average death rates, while Manhattan (MN) has the lowest.  
+    -  **Implication:** Higher death rates in the Bronx and Queens could reflect disparities in healthcare access, socioeconomic factors, or population density.  
+  4.  **Average Uninsured Percent by Borough**   
+    -  **Observation:** Queens (QN) has the highest percentage of uninsured individuals, followed by the Bronx (BX) and Brooklyn (BK). Manhattan (MN) and Staten Island (SI) have the lowest percentages.  
+    -  **Implication:** A higher uninsured rate in Queens and the Bronx may contribute to greater vulnerabilities and poorer health outcomes, as access to healthcare is limited.   
+
+<br>
+
+### Overall Insights:  
+
+>   
+  -  The Bronx emerges as a borough with consistently higher vulnerabilities across risk scores, vaccination rates, death rates, and uninsured rates, signaling it may need targeted public health interventions.  
+  -  Manhattan shows better performance across most metrics, suggesting stronger public health infrastructure and socioeconomic conditions.  
+  -  Queens and Brooklyn exhibit moderate vulnerabilities, but Queens stands out for its high uninsured rate, which could impact public health outcomes.  
+
+
+<br>
+<br>
 
 ## ANOVA for Uninsured Percentages
 
