@@ -64,7 +64,7 @@ evic_dist <- ggplot(data, aes(x = reorder(district, rate_eviction_filings), y = 
 
 evic_dist
 
-ggsave("figures/evic_dist.png", plot = evic_dist, width = 8, height = 6)
+ggsave("figures/Unstable_Housing_OGData/evic_dist.png", plot = evic_dist, width = 8, height = 6)
 
   
 ```
@@ -84,7 +84,7 @@ for_dist <- ggplot(data, aes(x = reorder(district, rate_forclosure_filings), y =
 
 for_dist
 
-ggsave("figures/for_dist.png", plot = for_dist, width = 8, height = 6)
+ggsave("figures/Unstable_Housing_OGData/for_dist.png", plot = for_dist, width = 8, height = 6)
 
 ```
 
@@ -103,7 +103,7 @@ corr_evic_for <- ggplot(data, aes(x = rate_eviction_filings, y = rate_forclosure
 
 corr_evic_for
 
-ggsave("figures/corr_evic_for.png", plot = corr_evic_for, width = 8, height = 6)
+ggsave("figures/Unstable_Housing_OGData/corr_evic_for.png", plot = corr_evic_for, width = 8, height = 6)
 
 ```
 
@@ -128,7 +128,7 @@ print(housing_by_borough)
 
 ```{r}
 # Eviction Rates by Borough
-ggplot(housing_by_borough, aes(x = reorder(borough, avg_eviction_rate), y = avg_eviction_rate, fill = avg_eviction_rate)) +
+avg_evic_borough <- ggplot(housing_by_borough, aes(x = reorder(borough, avg_eviction_rate), y = avg_eviction_rate, fill = avg_eviction_rate)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   theme_minimal() +
@@ -138,8 +138,13 @@ ggplot(housing_by_borough, aes(x = reorder(borough, avg_eviction_rate), y = avg_
     y = "Eviction Rate"
   )
 
+avg_evic_borough
+
+ggsave("figures/Unstable_Housing_OGData/avg_evic_borough.png", plot = avg_evic_borough, width = 8, height = 6)
+
+
 # Foreclosure Rates by Borough
-ggplot(housing_by_borough, aes(x = reorder(borough, avg_foreclosure_rate), y = avg_foreclosure_rate, fill = avg_foreclosure_rate)) +
+avg_fore_borough <- ggplot(housing_by_borough, aes(x = reorder(borough, avg_foreclosure_rate), y = avg_foreclosure_rate, fill = avg_foreclosure_rate)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   theme_minimal() +
@@ -148,6 +153,11 @@ ggplot(housing_by_borough, aes(x = reorder(borough, avg_foreclosure_rate), y = a
     x = "Borough",
     y = "Foreclosure Rate"
   )
+
+avg_fore_borough
+
+ggsave("figures/Unstable_Housing_OGData/avg_fore_borough.png", plot = avg_fore_borough, width = 8, height = 6)
+
 
 ```
 
@@ -207,7 +217,7 @@ print(contingency_table)
 
 > The contingency table represents the frequency of districts in each eviction_rate_category (Low, Medium, High) by borough:
 
-![Continingency Table - Evictions](./imgs/contingency_table_evic_borough.png)
+![Continingency Table - Evictions](./imgs/Unstable_Housing_OGData/contingency_table_evic_borough.png)
 
 ### Run the Chi-Squared Test - Evictions
 
@@ -255,7 +265,7 @@ print(contingency_table_foreclosure)
 
 ```
 
-![Contingency Table - Foreclosures](./imgs/contingency_table_foreclosure_borough.png)
+![Contingency Table - Foreclosures](./imgs/Unstable_Housing_OGData/contingency_table_foreclosure_borough.png)
 
 ### Run the Chi-Squared Test - Foreclosure
 
@@ -295,11 +305,15 @@ if (any(chi_squared_test_foreclosure$expected < 5)) {
 ## Visualoize Foreclosure Rate Cateogires by Borough
 ```{r}
 # Visualize the contingency table as a heatmap
-ggplot(as.data.frame(as.table(contingency_table_foreclosure)), aes(x = Var2, y = Var1, fill = Freq)) +
+fore_categ_borough <- ggplot(as.data.frame(as.table(contingency_table_foreclosure)), aes(x = Var2, y = Var1, fill = Freq)) +
   geom_tile() +
   scale_fill_gradient(low = "white", high = "red") +
   theme_minimal() +
   labs(title = "Foreclosure Rate Categories by Borough", x = "Borough", y = "Foreclosure Rate Category")
+
+fore_categ_borough
+
+ggsave("figures/Unstable_Housing_OGData/fore_categ_borough.png", plot = fore_categ_borough, width = 8, height = 6)
 
 ```
 

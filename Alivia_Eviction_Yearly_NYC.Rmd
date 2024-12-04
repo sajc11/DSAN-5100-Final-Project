@@ -1,0 +1,315 @@
+---
+title: "Eviction Map Yearly Data - EDA"
+author: "Alivia Castor"
+date: "2024-12-04"
+output: html_document
+---
+
+# RMD Notebook Research Goal
+
+> This notebook is used to extract, combine, clean, and process the yearly eviction data sourced from ![Eviction Lab](https://evictionlab.org/). Through this notebook we aim to conduct EDA on this data to serve as a component of our research project, where we examine: **the key factors that contribute to high housing risk across boroughs, and how public health and socioeconomic indicators correlate with these risks?**
+
+
+# Dataset Combination & Preprocessing
+
+## Data Preporcessing Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+```
+
+## Combining Original DataSets 
+
+**This data comes from yearly data sourced from `EvictionLab`**  
+
+### Load Data and Libraries
+
+```{r}
+# Read the CSV files
+queens_bronx_manhattan <- read_csv("./data/eviction_stats_Queens_Bronx_Manhattan.csv")
+queens_richmond <- read_csv("./data/eviction_stats_Brooklyn_Richmond.csv")
+```
+
+### Combine `EvictionLab` Yearly Datasets
+
+```{r}
+# Combine the datasets
+nyc_evictions <- bind_rows(queens_bronx_manhattan, queens_richmond) %>%
+  # Remove any potential duplicates
+  distinct() %>%
+  # Sort by year and county name
+  arrange(year, name) %>%
+  # Create a borough column without "County"
+  mutate(borough = str_replace(name, " County", ""))
+
+```
+
+### Create Data Dictionary
+
+```{r}
+# Create data dictionary
+data_dictionary <- tribble(
+  ~Column, ~Description,
+  "GEOID", "Census FIPS code for 2010 geography",
+  "name", "Census location name",
+  "parent-location", "Parent location in Census hierarchy",
+  "population", "Total population",
+  "poverty-rate", "% of population with income below poverty level",
+  "pct-renter-occupied", "% of occupied housing units that are renter-occupied",
+  "median-gross-rent", "Median gross rent",
+  "median-household-income", "Median household income",
+  "median-property-value", "Median property value",
+  "rent-burden", "Median gross rent as % of household income (max 50%)",
+  "pct-white", "% population White alone, not Hispanic/Latino",
+  "pct-af-am", "% population Black/African American alone, not Hispanic/Latino",
+  "pct-hispanic", "% population Hispanic/Latino origin",
+  "pct-am-ind", "% population American Indian/Alaska Native alone, not Hispanic/Latino",
+  "pct-asian", "% population Asian alone, not Hispanic/Latino",
+  "pct-nh-pi", "% population Native Hawaiian/Pacific Islander alone, not Hispanic/Latino",
+  "pct-other", "% population other race alone, not Hispanic/Latino",
+  "pct-multiple", "% population two or more races, not Hispanic/Latino",
+  "households-threatened", "Number of unique households receiving eviction filing",
+  "eviction-filings", "All eviction cases filed, including multiple cases against same address",
+  "households-threatened-rate", "% of unique households receiving eviction filing",
+  "eviction-filing-rate", "Ratio of evictions filed to renter-occupied homes",
+  "filings-per-day", "Number of eviction filings per day"
+)
+```
+
+### Summary Statistics of NYC Yearly Eviction Dataset
+
+```{r}
+# Display basic information about the dataset
+cat("NYC Eviction Dataset Summary\n")
+cat("==========================\n")
+cat("Time period:", min(nyc_evictions$year), "-", max(nyc_evictions$year), "\n")
+cat("Boroughs included:", paste(unique(nyc_evictions$borough), collapse=", "), "\n")
+cat("Total records:", nrow(nyc_evictions), "\n")
+cat("Number of columns:", ncol(nyc_evictions), "\n\n")
+
+# Display first few rows of the dataset
+head(nyc_evictions) %>%
+  select(year, borough, population, `eviction-filings`, `households-threatened`) %>%
+  kable(caption = "Sample of NYC Eviction Data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+# Display data dictionary
+data_dictionary %>%
+  kable(caption = "Data Dictionary") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE,
+                position = "left")
+
+# Save combined dataset if needed
+write_csv(nyc_evictions, "./data/nyc_eviction_data_combined.csv")
+```
+
+# EDA on `EvictionLab` Data
+
+## Preprocessing 
+
+### Load EDA Libraries
+
+```{r}
+# Load additional required packages
+library(ggplot2)
+library(scales)
+library(gridExtra)
+
+```
+
+### Mapping County Names to Borough Names
+
+```{r}
+# Create simplified borough mapping
+borough_mapping <- c(
+  "New York" = "Manhattan (NY)",
+  "Kings" = "Brooklyn (K)",
+  "Queens" = "Queens (Q)",
+  "Bronx" = "The Bronx (B)",
+  "Richmond" = "Staten Island (R)"
+)
+
+# Update the borough names in the dataset
+nyc_evictions <- nyc_evictions %>%
+  mutate(borough_simple = borough_mapping[borough])
+
+```
+
+
+## Main EDA
+
+### Temporal Trends of Evictions by Borough
+
+```{r}
+# 1. Temporal Trends of Evictions by Borough
+temporal_evic_borough <- ggplot(nyc_evictions, aes(x = year, y = `eviction-filings`, color = borough_simple)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Eviction Filings Over Time by Borough",
+       x = "Year",
+       y = "Number of Eviction Filings",
+       color = "Borough") +
+  scale_y_continuous(labels = comma) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 7))
+
+temporal_evic_borough
+
+ggsave("figures/Yearly_Eviction/temporal_evic_borough.png", plot = temporal_evic_borough, width = 8, height = 6)
+
+```
+
+
+### Relationship between Poverty Rate and Eviction Filing Rate
+
+```{r}
+# 2. Relationship between Poverty Rate and Eviction Filing Rate
+poverty_evic <- ggplot(nyc_evictions, aes(x = `poverty-rate`, y = `eviction-filing-rate`, color = borough_simple)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Poverty Rate vs Eviction Filing Rate",
+       x = "Poverty Rate (%)",
+       y = "Eviction Filing Rate",
+       color = "Borough") +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 8))
+
+poverty_evic
+
+ggsave("figures/Yearly_Eviction/poverty_evic.png", plot = poverty_evic, width = 8, height = 6)
+
+```
+
+
+### Summary statistics by borough
+
+```{r}
+# 3. Summary statistics by borough
+borough_summary <- nyc_evictions %>%
+  group_by(borough_simple) %>%
+  summarise(
+    avg_eviction_rate = mean(`eviction-filing-rate`),
+    avg_poverty_rate = mean(`poverty-rate`),
+    avg_rent_burden = mean(`rent-burden`),
+    avg_median_rent = mean(`median-gross-rent`),
+    total_filings = sum(`eviction-filings`)
+  ) %>%
+  arrange(desc(avg_eviction_rate))
+
+# Display summary statistics
+kable(borough_summary, 
+      col.names = c("Borough", "Avg Eviction Rate", "Avg Poverty Rate", 
+                    "Avg Rent Burden", "Avg Median Rent", "Total Filings"),
+      caption = "Borough-level Summary Statistics",
+      digits = 2) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+
+
+### Rent burden analysis
+
+```{r}
+# 4. Rent burden analysis
+rent_burden <- ggplot(nyc_evictions, aes(x = borough_full, y = `rent-burden`, fill = borough_simple)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Rent Burden Distribution by Borough",
+       x = "Borough",
+       y = "Rent Burden (%)") +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+rent_burden
+
+ggsave("figures/Yearly_Eviction/rent_burden.png", plot = rent_burden, width = 8, height = 6)
+
+```
+
+
+### Correlation between median rent and eviction rates
+
+```{r}
+# 5. Correlation between median rent and eviction rates
+med_gross_rent_evic <- ggplot(nyc_evictions, aes(x = `median-gross-rent`, y = `eviction-filing-rate`, 
+                         color = borough_simple)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Median Gross Rent vs Eviction Filing Rate",
+       x = "Median Gross Rent ($)",
+       y = "Eviction Filing Rate",
+       color = "Borough") +
+  scale_x_continuous(labels = dollar) +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size = 8))
+
+med_gross_rent_evic
+
+ggsave("figures/Yearly_Eviction/med_gross_rent_evic.png", plot = med_gross_rent_evic, width = 8, height = 6)
+
+```
+
+
+### Demographic analysis
+
+```{r}
+# 6. Demographic analysis
+demographic_summary <- nyc_evictions %>%
+  group_by(borough_simple) %>%
+  summarise(
+    white = mean(`pct-white`),
+    black = mean(`pct-af-am`),
+    hispanic = mean(`pct-hispanic`),
+    asian = mean(`pct-asian`)
+  ) %>%
+  pivot_longer(cols = -borough_simple, 
+               names_to = "demographic", 
+               values_to = "percentage")
+
+demog_comp_borough <- ggplot(demographic_summary, aes(x = borough_simple, y = percentage, fill = demographic)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  labs(title = "Demographic Composition by Borough",
+       x = "Borough",
+       y = "Percentage",
+       fill = "Demographic Group") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+demog_comp_borough
+
+ggsave("figures/Yearly_Eviction/demog_comp_borough.png", plot = demog_comp_borough, width = 8, height = 6)
+
+```
+
+
+### Time series of households threatened vs actual filings
+
+```{r}
+# 7. Time series of households threatened vs actual filings
+time_series <- ggplot(nyc_evictions, aes(x = year)) +
+  geom_line(aes(y = `households-threatened`, color = "Households Threatened")) +
+  geom_line(aes(y = `eviction-filings`, color = "Eviction Filings")) +
+  facet_wrap(~borough_simple, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Households Threatened vs Actual Eviction Filings",
+       x = "Year",
+       y = "Count",
+       color = "Metric") +
+  scale_y_continuous(labels = comma) +
+  theme(strip.text = element_text(size = 7))
+
+time_series
+
+ggsave("figures/Yearly_Eviction/time_series.png", plot = time_series, width = 8, height = 6)
+  
+```
+

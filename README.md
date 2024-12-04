@@ -44,17 +44,17 @@ The dataset used in this project includes housing risk scores and a variety of p
 1. **Vaccination Rate vs. Risk Score**:
    - **Trend**: Negative correlation.
    - **Insight**: Higher vaccination rates correlate with lower housing risk scores, indicating better public health infrastructure.
-   - ![Vaccination Rate vs Risk Score](./figures/vax_vs_risk.png)
+   - ![Vaccination Rate vs Risk Score](./figures/PubHealth_OGData/vax_vs_risk.png)
 
 2. **Death Rate vs. Risk Score**:
    - **Trend**: Positive correlation.
    - **Insight**: Districts with higher death rates tend to have higher risk scores, reflecting potential disparities in healthcare access.
-   - ![Death Rate vs Risk Score](./figures/death_vs_risk.png)
+   - ![Death Rate vs Risk Score](./figures/PubHealth_OGData/death_vs_risk.png)
 
 3. **Uninsured Percent vs. Risk Score**:
    - **Trend**: Positive correlation.
    - **Insight**: Higher uninsured percentages are linked to increased housing risks, suggesting the importance of health insurance coverage.
-   - ![Uninsured Percent vs Risk Score](./figures/uninsured_vs_risk.png)
+   - ![Uninsured Percent vs Risk Score](./figures/PubHealth_OGData/uninsured_vs_risk.png)
 
 ### **2. Borough-Level Comparisons**
 
@@ -64,10 +64,10 @@ The dataset used in this project includes housing risk scores and a variety of p
 
 **Visuals**:  
 
-- Risk Scores by Borough: ![Risk Scores by Borough](./figures/borough_risk_scores.png)
-- Death Rates by Borough: ![Death Rates by Borough](./figures/borough_death_rates.png)
-- Vaccination Rates by Borough: ![Vaccination Rates by Borough](./figures/borough_vaccination_rates.png)
-- Uninsured Percent by Borough: ![Uninsured Percent by Borough](./figures/borough_uninsured_percent.png)
+- Risk Scores by Borough: ![Risk Scores by Borough](./figures/PubHealth_OGData/borough_risk_scores.png)
+- Death Rates by Borough: ![Death Rates by Borough](./figures/PubHealth_OGData/borough_death_rates.png)
+- Vaccination Rates by Borough: ![Vaccination Rates by Borough](./figures/PubHealth_OGData/borough_vaccination_rates.png)
+- Uninsured Percent by Borough: ![Uninsured Percent by Borough](./figures/PubHealth_OGData/borough_uninsured_percent.png)
 
 ---
 
@@ -86,7 +86,7 @@ The dataset used in this project includes housing risk scores and a variety of p
 ### **2. Correlation Analysis**
 
 - Strong correlations exist between public health metrics like limited English proficiency and rent burden.
-- **Figure**: ![Correlation Matrix](./figures/consistent_decimal_correlation_heatmap.png)
+- **Figure**: ![Correlation Matrix](./figures/PubHealth_OGData/consistent_decimal_correlation_heatmap.png)
 
 ---
 
@@ -95,18 +95,18 @@ The dataset used in this project includes housing risk scores and a variety of p
 ### **Public Health Metrics**
 
 - **Vaccination Rates**:  
-  ![Vaccination Rate Distribution](./figures/vax_rate_dist.png)
+  ![Vaccination Rate Distribution](./figures/PubHealth_OGData/vax_rate_dist.png)
 
 - **Death Rates**:  
-  ![Death Rate Distribution](./figures/death_rate_dist.png)
+  ![Death Rate Distribution](./figures/PubHealth_OGData/death_rate_dist.png)
 
 - **Uninsured Percent**:  
-  ![Uninsured Percent Distribution](./figures/uninsured_dist.png)
+  ![Uninsured Percent Distribution](./figures/PubHealth_OGData/uninsured_dist.png)
 
 ### **Risk Scores**
 
 - **Top 20 Districts by Risk Scores**:  
-  ![Top Risk Scores](./figures/risk_score_plot.png)
+  ![Top Risk Scores](./figures/EDA_OGData/risk_score_plot.png)
 
 ---
 

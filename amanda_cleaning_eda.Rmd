@@ -163,7 +163,7 @@ risk_score_plot
 
 ```{r}
 # save plot to device
-ggsave("./figures/risk_score_plot.png", risk_score_plot)
+ggsave("./figures/EDA_OGData/risk_score_plot.png", risk_score_plot)
 ```
 
 ```{r}

@@ -122,19 +122,19 @@ vax_dist <- ggplot(data, aes(x = covid_vax_rate)) +
 vax_dist
 
 # save figures
-ggsave("figures/vax_rate_dist.png", plot = vax_dist, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/vax_rate_dist.png", plot = vax_dist, width = 8, height = 6)
 
 # COVID-19 Death Rates Distribution
-death_dist <- ggplot(data, aes(x = covid_death_rate)) +
+death_dist <- ggplot(data, aes(x = covid_death_rate)) +  # Changed from Pdeath_dist to death_dist
   geom_histogram(binwidth = 0.001, fill = "red", alpha = 0.7) +
   theme_minimal() +
   labs(title = "Distribution of COVID-19 Death Rates", x = "Death Rate", y = "Frequency")
 
 # Display plot inline
-death_dist
+death_dist  # Now matches the object name
 
 # save figures
-ggsave("figures/death_rate_dist.png", plot = death_dist, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/death_rate_dist.png", plot = death_dist, width = 8, height = 6)
 
 # Percent Uninsured Distribution
 uninsured_dist <- ggplot(data, aes(x = percent_uninsured)) +
@@ -146,7 +146,7 @@ uninsured_dist <- ggplot(data, aes(x = percent_uninsured)) +
 uninsured_dist
 
 # save figures
-ggsave("figures/uninsured_dist.png", plot = uninsured_dist, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/uninsured_dist.png", plot = uninsured_dist, width = 8, height = 6)
 ```
 
 ### Key Observations:
@@ -194,7 +194,7 @@ vax_vs_risk <- ggplot(data, aes(x = covid_vax_rate, y = total_risk_score)) +
 vax_vs_risk
 
 # save figures
-ggsave("figures/vax_vs_risk.png", plot = vax_vs_risk, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/vax_vs_risk.png", plot = vax_vs_risk, width = 8, height = 6)
 
 # Death Rate vs. Risk Score
 death_vs_risk <- ggplot(data, aes(x = covid_death_rate, y = total_risk_score)) +
@@ -207,7 +207,7 @@ death_vs_risk <- ggplot(data, aes(x = covid_death_rate, y = total_risk_score)) +
 death_vs_risk
 
 # save figures
-ggsave("figures/death_vs_risk.png", plot = death_vs_risk, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/death_vs_risk.png", plot = death_vs_risk, width = 8, height = 6)
 
 # Percent Uninsured vs. Risk Score
 uninsured_vs_risk <- ggplot(data, aes(x = percent_uninsured, y = total_risk_score)) +
@@ -220,7 +220,7 @@ uninsured_vs_risk <- ggplot(data, aes(x = percent_uninsured, y = total_risk_scor
 uninsured_vs_risk
 
 # save figures
-ggsave("figures/uninsured_vs_risk.png", plot = uninsured_vs_risk, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/uninsured_vs_risk.png", plot = uninsured_vs_risk, width = 8, height = 6)
 ```
 
 ### Key Observations:
@@ -362,7 +362,7 @@ heatmap <- ggplot(cor_data, aes(x = Var1, y = Var2, fill = Correlation)) +
   )
 
 # Save the updated plot
-ggsave("figures/consistent_decimal_correlation_heatmap.png", plot = heatmap, width = 10, height = 8)
+ggsave("figures/PubHealth_OGData/consistent_decimal_correlation_heatmap.png", plot = heatmap, width = 10, height = 8)
 
 
 # Display the heatmap inline
@@ -434,7 +434,7 @@ borough_risk_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_ris
   coord_flip()
 
 # Save the plot
-ggsave("figures/borough_risk_scores.png", plot = borough_risk_plot, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/borough_risk_scores.png", plot = borough_risk_plot, width = 8, height = 6)
 
 # Display the plot inline
 borough_risk_plot
@@ -447,7 +447,7 @@ borough_vax_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_vax_
   coord_flip()
 
 # Save the vaccination rate plot
-ggsave("figures/borough_vaccination_rates.png", plot = borough_vax_plot, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/borough_vaccination_rates.png", plot = borough_vax_plot, width = 8, height = 6)
 
 # Display plot inline
 borough_vax_plot
@@ -460,7 +460,7 @@ borough_death_plot <- ggplot(borough_comparison, aes(x = reorder(borough, avg_de
   coord_flip()
 
 # Save the death rate plot
-ggsave("figures/borough_death_rates.png", plot = borough_death_plot, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/borough_death_rates.png", plot = borough_death_plot, width = 8, height = 6)
 
 # Display plot inline
 borough_death_plot
@@ -473,7 +473,7 @@ borough_uninsured_plot <- ggplot(borough_comparison, aes(x = reorder(borough, av
   coord_flip()
 
 # Save the uninsured percent plot
-ggsave("figures/borough_uninsured_percent.png", plot = borough_uninsured_plot, width = 8, height = 6)
+ggsave("figures/PubHealth_OGData/borough_uninsured_percent.png", plot = borough_uninsured_plot, width = 8, height = 6)
 
 # Display plot inline
 borough_uninsured_plot
