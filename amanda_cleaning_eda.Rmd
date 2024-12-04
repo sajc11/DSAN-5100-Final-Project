@@ -1,0 +1,172 @@
+---
+title: "R Notebook"
+author: "Amanda Hao"
+output: rmdformats::robobook
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+data <- read.csv("./data/data-XDEVF.csv")
+head(data)
+```
+
+```{r}
+colnames(data)
+```
+
+```{r}
+library(tidyverse)
+
+colnames(data) <- c("district",
+                    "name",
+                    "covid_vax_rate", # march 23, 2023
+                    "covid_death_rate", # per 1000 ppl (2022-2022)
+                    "percent_uninsured", # 2021
+                    "percent_severe_crowding", # 2021
+                    "percent_area_median_income", # 2021
+                    "percent_poc", # 2021
+                    "percent_lim_engl_prof", # 2021
+                    "percent_rent_burden", # 2021
+                    "rate_eviction_filings", # per 1000 renter households (2022)
+                    "rate_tenant_cases", # per 1000 renter households (2022)
+                    "rate_housing_violations", # hazardous housing code violations in 6+ unit buildings (per 1000 units) [2022]
+                    "rate_unplanned_outages", # unplanned NYCHA service outages (per building) [2022]
+                    "change_median_gross_rent", # 2016-2021
+                    "change_sale_price", # res sale price per sq ft (2020-2022)
+                    "num_new_nonaffordable_units", # 2022
+                    "expiring_lihtc_units", # 2023-2027
+                    "rate_forclosure_filings", # per 1000 small (1-4 unit) homes (2022)
+                    "share_nonbank_small_home_loans", # non-bank small (1-4 unit) home purchase loans (2021),
+                    "total_risk_score"
+                    )
+
+str(data)
+```
+
+covid death rate is per 1000 people, so divide column values by 10 (divide by 1000, multiply by 100) to convert crude death rate to true death rate. a lot of other columns are also calculated by "per 1000 X," so we change those as well
+
+```{r}
+data$covid_death_rate <- (data$covid_death_rate)/10
+data$rate_eviction_filings <- (data$rate_eviction_filings)/10
+data$rate_tenant_cases <- (data$rate_tenant_cases)/10
+data$rate_housing_violations <- (data$rate_housing_violations)/10
+data$rate_forclosure_filings <- (data$rate_forclosure_filings)/10
+
+# head(data$covid_death_rate)
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+cleaned_df <- data %>%
+  # remove "% AMI", convert to num
+  mutate(percent_area_median_income = as.numeric(
+    str_replace(percent_area_median_income, "%\\s*AMI", ""))) %>%
+  # remove % sign, convert percentage col to num
+  mutate(across(contains("percent") | contains("rate") | contains("change") | contains("share"), 
+                ~as.numeric(str_replace(., "%", ""))/100)) %>%
+  mutate(total_risk_score = as.numeric(total_risk_score))
+
+head(cleaned_df)
+```
+
+```{r}
+list(
+  total_districts = nrow(cleaned_df),
+  total_columns = ncol(cleaned_df),
+  column_names = names(cleaned_df)
+)
+```
+
+```{r}
+library(corrr)
+
+corr_matrix <- cleaned_df %>%
+  select(where(is.numeric)) %>%
+  correlate() %>%
+  focus(total_risk_score)
+
+corr_matrix
+```
+
+```{r}
+var_dist <- cleaned_df %>%
+  select(
+    covid_vax_rate,
+    covid_death_rate,
+    percent_uninsured,
+    percent_rent_burden,
+    rate_eviction_filings
+  ) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "value") %>%
+  group_by(variable) %>%
+  summarise(
+    mean = mean(value, na.rm = TRUE),
+    median = median(value, na.rm = TRUE),
+    sd = sd(value, na.rm = TRUE)
+  )
+
+var_dist
+```
+
+```{r}
+borough_comparison <- cleaned_df %>%
+  mutate(borough = str_extract(district, "^[A-Z]+")) %>%
+  group_by(borough) %>%
+  summarise(
+    avg_risk_score = mean(total_risk_score, na.rm=TRUE),
+    avg_vax_rate = mean(covid_vax_rate),
+    avg_death_rate = mean(covid_death_rate),
+    avg_rent_burden = mean(percent_rent_burden),
+    avg_eviction_rate = mean(rate_eviction_filings)
+  )
+
+borough_comparison
+```
+
+```{r}
+risk_score_ana <- cleaned_df %>%
+  arrange(desc(total_risk_score)) %>%
+  select(name, district, total_risk_score)
+
+risk_score_ana
+```
+
+```{r}
+library(ggplot2)
+
+n <- 20 # top n districts
+
+top_districts <- cleaned_df %>%
+  arrange(desc(total_risk_score)) %>%
+  slice_head(n=n)
+
+risk_score_plot <- ggplot(top_districts, 
+                           aes(x = reorder(name, total_risk_score), 
+                               y = total_risk_score, 
+                               fill = total_risk_score)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = paste("Top", n, "Total Risk Scores by District"),
+    x = "District",
+    y = "Total Risk Score"
+  )
+
+risk_score_plot
+```
+
+```{r}
+# save plot to device
+ggsave("./figures/risk_score_plot.png", risk_score_plot)
+```
+
+```{r}
+# save cleaned csv to device
+write_csv(cleaned_df, "./data/cleaned_housing_risk_data.csv")
+```

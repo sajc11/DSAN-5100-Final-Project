@@ -1,0 +1,297 @@
+---
+title: "Public Health Analysis for Housing Risk Scores"
+author: "Alivia Castor"
+date: "2024-12-04"
+output: rmdformats::robobook
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Processing
+
+## Load Data
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+# Load the cleaned dataset
+data <- read_csv("data/cleaned_housing_risk_data.csv")
+
+# Normalize the total risk score
+data$total_risk_score <- data$total_risk_score / 36
+
+str(data)
+
+```
+
+### Data Verification
+
+> Data set was correctly loaded and has $59$ rows and $21$ columns\
+> - The district and name columns are strings (`chr`).\
+> - The remaining $19$ columns are numeric (`dbl`), including
+> `covid_vax_rate`, `covid_death_rate`, `percent_uninsured`, and
+> `total_risk_score`.
+
+### Key Observations for Analysis
+
+> **Public Health Metrics:**\
+> - `covid_vax_rate:` Proportion of vaccinated individuals in each
+> district.\
+> - `covid_death_rate:` COVID-19 death rates in each district.\
+> - `percent_uninsured:` Proportion of uninsured individuals.\
+> <br> **Total Risk Score:**\
+> - Already normalized (divided by $36$), making it suitable for direct
+> comparisons.\
+> <br> **Column Names:**\
+> - Properly formatted and ready for visualization and statistical
+> analysis.
+
+<br> <br>
+
+## Descriptive Statistics
+
+```{r}
+summary_stats <- data %>%
+  summarise(
+    mean_vax_rate = mean(covid_vax_rate, na.rm = TRUE),
+    median_vax_rate = median(covid_vax_rate, na.rm = TRUE),
+    var_vax_rate = var(covid_vax_rate, na.rm = TRUE),
+    mean_death_rate = mean(covid_death_rate, na.rm = TRUE),
+    median_death_rate = median(covid_death_rate, na.rm = TRUE),
+    var_death_rate = var(covid_death_rate, na.rm = TRUE),
+    mean_uninsured = mean(percent_uninsured, na.rm = TRUE),
+    median_uninsured = median(percent_uninsured, na.rm = TRUE),
+    var_uninsured = var(percent_uninsured, na.rm = TRUE)
+  )
+summary_stats
+
+```
+
+### Results
+
+> -   **Mean Vaccination Rate (`mean_vax_rate`):**\
+> -   Average COVID-19 vaccination rate across districts: $0.7846$
+>     ($~78.46%$).\
+> -   **Median Vaccination Rate (`median_vax_rate`):**\
+> -   The midpoint vaccination rate: $0.775$ ($~77.5%$).\
+> -   **Variance of Vaccination Rates (`var_vax_rate`):**\
+> -   The spread of vaccination rates: $0.0107$.\
+> -   **Mean COVID-19 Death Rate (`mean_death_rate`):**\
+> -   Average death rate: $0.0052$ ($~0.52%$).\
+> -   **Median COVID-19 Death Rate (`median_death_rate`):**\
+> -   The midpoint death rate: $0.0053$ ($~0.53%$).
+
+> **These descriptive statistics indicate:**\
+> - Vaccination rates are relatively high and consistent across
+> districts (low variance).\
+> - COVID-19 death rates are low but vary slightly more than vaccination
+> rates.
+
+<br> <br>
+
+# Data Visualization
+
+## Distribution of Public Health Metrics
+
+```{r}
+ggplot(data, aes(x = covid_vax_rate)) +
+  geom_histogram(binwidth = 0.05, fill = "blue", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Distribution of COVID-19 Vaccination Rates", x = "Vaccination Rate", y = "Frequency")
+
+ggplot(data, aes(x = covid_death_rate)) +
+  geom_histogram(binwidth = 0.001, fill = "red", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Distribution of COVID-19 Death Rates", x = "Death Rate", y = "Frequency")
+
+ggplot(data, aes(x = percent_uninsured)) +
+  geom_histogram(binwidth = 0.01, fill = "green", alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Distribution of Percent Uninsured", x = "Percent Uninsured", y = "Frequency")
+
+```
+
+### Key Observations:
+
+> 1.  **COVID-19 Vaccination Rates**\
+>
+> -   The distribution shows most districts have vaccination rates
+>     clustered around 75-80%, with a few outliers above $100%$.\
+> -   This may indicate good overall vaccination coverage, though
+>     outliers might require investigation (e.g., data entry issues or
+>     over-reporting).\
+>
+> 2.  **COVID-19 Death Rates**\
+>
+> -   The majority of districts have death rates concentrated between
+>     $0.004$ and $0.006$, indicating relatively low variability.\
+> -   A small number of districts exhibit higher death rates, which
+>     could correlate with other factors like access to healthcare or
+>     socioeconomic conditions.\
+>
+> 3.  **Percent Uninsured**\
+>
+> -   Most districts have a percentage of uninsured individuals below
+>     $10%$, with a few extreme outliers above $15%$.\
+> -   These outliers might represent districts with limited access to
+>     affordable healthcare or high poverty rates.
+
+<br> <br>
+
+## Scatter Plots of Public Health Metrics vs. Housing Risk Scores
+
+```{r}
+ggplot(data, aes(x = covid_vax_rate, y = total_risk_score)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", col = "blue") +
+  theme_minimal() +
+  labs(title = "Vaccination Rate vs Risk Score", x = "Vaccination Rate", y = "Normalized Risk Score")
+
+ggplot(data, aes(x = covid_death_rate, y = total_risk_score)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", col = "red") +
+  theme_minimal() +
+  labs(title = "Death Rate vs Risk Score", x = "Death Rate", y = "Normalized Risk Score")
+
+ggplot(data, aes(x = percent_uninsured, y = total_risk_score)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", col = "green") +
+  theme_minimal() +
+  labs(title = "Percent Uninsured vs Risk Score", x = "Percent Uninsured", y = "Normalized Risk Score")
+
+```
+
+### Key Observations:
+
+> 1.  **Vaccination Rate vs. Risk Score**\
+>
+> -   **Trend:** Negative correlation.\
+> -   **Interpretation:** Districts with higher vaccination rates tend
+>     to have lower housing risk scores. This suggests that vaccination
+>     rates may serve as a proxy for improved public health
+>     infrastructure, which reduces risk.\
+>
+> 2.  **Death Rate vs. Risk Score**\
+>
+> -   **Trend:** Positive correlation.\
+> -   **Interpretation:** Districts with higher COVID-19 death rates
+>     tend to have higher housing risk scores. This could indicate that
+>     areas with higher mortality are more vulnerable, possibly due to
+>     poor access to healthcare or underlying socioeconomic
+>     disparities.\
+>
+> 3.  **Percent Uninsured vs. Risk Score**\
+>
+> -   **Trend:** Positive correlation.\
+> -   **Interpretation:** A higher percentage of uninsured individuals
+>     is associated with increased housing risk scores. This reinforces
+>     the idea that lack of insurance is linked to vulnerability and
+>     poor living conditions.
+
+# Hypothesis Testing
+
+## T-Test for Vaccination Rates
+
+```{r}
+median_vax_rate <- median(data$covid_vax_rate, na.rm = TRUE)
+data$vax_group <- ifelse(data$covid_vax_rate > median_vax_rate, "Above Median", "Below Median")
+t_test_vax <- t.test(total_risk_score ~ vax_group, data = data)
+t_test_vax
+
+```
+
+> The Welch two-sample t-test compares the mean housing risk scores
+> between districts with above-median and below-median vaccination
+> rates.
+
+### Results:
+
+> 1.  **T-Statistic (t):**\
+>
+> -   $t=−4.0846$: Indicates a significant difference in means between
+>     the two groups.\
+>
+> 2.  **Degrees of Freedom (df):**\
+>
+> -   $df=46.845$: Effective degrees of freedom for the test.\
+>
+> 3.  **P-Value:**\
+>
+> -   $p=0.0001712$: Extremely small p-value, which is less than the
+>     typical significance level of $α=0.05$. This means the null
+>     hypothesis (no difference in means) is rejected.\
+>
+> 4.  **Confidence Interval:**\
+>
+> -   $95%CI:[−0.2146,−0.0730]$: The true difference in means is
+>     estimated to fall within this interval. The negative interval
+>     confirms that the group with above-median vaccination rates has
+>     lower risk scores.
+
+### Group Means:
+
+> **Above Median Vaccination Rate:**\
+> - mean=$0.1790$\
+> **Below Median Vaccination Rate:**\
+> - mean=$0.3228$
+
+### Interpretation:
+
+> -   Districts with higher vaccination rates have significantly lower
+>     housing risk scores than those with lower vaccination rates.\
+> -   This suggests that higher vaccination coverage might be associated
+>     with improved overall resilience and public health infrastructure,
+>     reducing housing-related vulnerabilities.
+
+## ANOVA for Uninsured Percentages
+
+```{r}
+data$uninsured_group <- cut(data$percent_uninsured, breaks = 3, labels = c("Low", "Medium", "High"))
+anova_uninsured <- aov(total_risk_score ~ uninsured_group, data = data)
+summary(anova_uninsured)
+
+```
+
+### Results:
+
+> **Degrees of Freedom (`Df`):**\
+> - `uninsured_group`: $2$ groups (Low, Medium, High uninsured
+> percentages).\
+> - `Residuals`: $53$, indicating the remaining degrees of freedom after
+> accounting for the groups.\
+> **Sum of Squares (`Sum Sq`):**\
+> - Variance explained by the uninsured group: $0.4326$.\
+> - Residual variance (unexplained): $0.8237$.\
+> **Mean Square (`Mean Sq`):**\
+> - Group variance per degree of freedom: $0.21629$.\
+> - Residual variance per degree of freedom: $0.01554$.\
+> **F-Statistic (`F value`):**\
+> - $F=13.92$, indicating that the variance between groups is much
+> larger than the variance within groups.\
+> **P-Value (`Pr(>F)`):**\
+> - $p=1.39e−05$, highly significant ($p<0.001$).\
+> - This suggests that there is a statistically significant difference
+> in risk scores between the three groups of uninsured percentages.\
+> **Significance Codes:**\
+> - The \*\*\* next to the p-value indicates a very high level of
+> statistical significance ($p<0.001$).\
+> **Observations Deleted:**\
+> - $3$ rows were excluded due to missing data in the percent_uninsured
+> column.
+
+### Conclusion:
+
+> **Key Finding:**\
+> The level of uninsured individuals (Low, Medium, High) significantly
+> impacts the normalized housing risk scores.\
+> <br> **Implication:**\
+> Policies aimed at reducing the percentage of uninsured individuals may
+> lower housing risk scores, particularly in districts with higher
+> uninsured populations.
