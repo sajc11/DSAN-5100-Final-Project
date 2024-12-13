@@ -1,0 +1,103 @@
+```{r}
+library(dplyr)
+library(ggplot2)
+library(car)   
+library(coin)  
+library(boot)      
+library(stats) 
+```
+
+```{r}
+data <- read.csv("cleaned_data_in_R.csv")
+colnames(data) <- gsub(" ", "_", colnames(data))
+colnames(data)
+```
+
+```{r}
+data$Limited_English_Proficiency_Rate_Out_Of_100 <- data$Percent_Limited_English_Proficiency
+data$Percent_Limited_English_Proficiency <- NULL
+data$Limited_English_Proficiency_Rate_Out_Of_100 <- as.numeric(as.character(data$Limited_English_Proficiency_Rate_Out_Of_100))
+
+data$Total_Risk_Score <- data$Total_Risk_Score / 36
+data$Housing_Risk <- as.numeric(as.character(data$Total_Risk_Score))
+
+data$Area_Median_Income <- data$Percent_of_Area_Median_Income / 100
+data$Percent_of_Area_Median_Income <- NULL
+data$Area_Median_Income <- as.numeric(as.character(data$Area_Median_Income))
+
+data$Uninsured_Rate_Out_Of_100 <- data$Percent_Uninsured
+data$Percent_Uninsured <- NULL
+data$Uninsured_Rate_Out_Of_100 <- as.numeric(as.character(data$Uninsured_Rate_Out_Of_100))
+
+data$People_of_Color <- data$Percent_People_of_Color
+data$Percent_People_of_Color <- NULL
+data$People_of_Color <- as.numeric(as.character(data$People_of_Color))
+```
+```{r}
+hist(data$Area_Median_Income, main = "Histogram of Area Median Income", xlab = "Area Median Income", col = "skyblue", border = "white")
+
+qqnorm(data$Area_Median_Income, main = "Q-Q Plot of Area Median Income")
+qqline(data$Area_Median_Income, col = "red")
+```
+```{r}
+hist(data$Housing_Risk, main = "Histogram of Housing Risk", xlab = "Housing Risk (Percent)", col = "lightgreen", border = "white")
+qqnorm(data$Housing_Risk, main = "Q-Q Plot of Housing Risk")
+qqline(data$Housing_Risk, col = "red")
+```
+```{r}
+qqnorm(data$Limited_English_Proficiency_Rate_Out_Of_100, 
+       main = "Q-Q Plot of Limited English Proficiency Rate")
+qqline(data$Limited_English_Proficiency_Rate_Out_Of_100, col = "red")
+```
+```{r}
+qqnorm(data$People_of_Color, 
+       main = "Q-Q Plot of People of Color")
+qqline(data$People_of_Color, col = "red")
+```
+```{r}
+shapiro.test(data$Area_Median_Income)
+shapiro.test(data$Total_Risk_Score)
+shapiro.test(data$Limited_English_Proficiency_Rate_Out_Of_100)
+shapiro.test(data$People_of_Color)
+```
+```{r}
+data$IncomeGroup <- cut(data$Area_Median_Income, 
+                        breaks = quantile(data$Area_Median_Income, probs = c(0, 0.33, 0.67, 1), na.rm = TRUE),
+                        labels = c("Low", "Medium", "High"),
+                        include.lowest = TRUE)
+
+data$ProficiencyGroup_POC <- ifelse(data$People_of_Color >= 50, "More People of Colour", "Less People of Colour")
+```
+```{r}
+library(rpart)
+tree_model <- rpart(Housing_Risk ~ Limited_English_Proficiency_Rate_Out_Of_100, data = data)
+print(tree_model)
+```
+```{r}
+data$ProficiencyGroup <- ifelse(data$Limited_English_Proficiency_Rate_Out_Of_100 >= 19.2, "Non-Proficient", "Proficient")
+```
+
+```{r}
+cor.test(data$Area_Median_Income, data$Housing_Risk, method = "spearman")
+cor.test(data$Limited_English_Proficiency_Rate_Out_Of_100, data$Housing_Risk, method = "spearman")
+cor.test(data$People_of_Color, data$Housing_Risk, method = "spearman")
+```
+```{r}
+ggplot(data, aes(x = IncomeGroup, y = Housing_Risk, fill = IncomeGroup)) +
+  geom_boxplot() +
+  labs(title = "Housing Risk Across Income Groups", x = "Income Group", y = "Housing Risk") 
+```
+```{r}
+boxplot(Housing_Risk ~ ProficiencyGroup, data = data, 
+    main = "Housing Risk by Limited English Proficiency Groups", 
+    xlab = "Proficiency Group", ylab = "Housing Risk", 
+    col = c("lightblue", "pink"))
+```
+```{r}
+```{r}
+boxplot(Housing_Risk ~ ProficiencyGroup_POC, data = data, 
+        main = "Housing Risk by People of Colour",
+        xlab = "Percent of People of Colour", ylab = "Housing Risk",
+        col = c("blue", "green"))
+```
+
