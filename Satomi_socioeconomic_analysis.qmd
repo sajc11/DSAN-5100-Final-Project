@@ -94,7 +94,6 @@ boxplot(Housing_Risk ~ ProficiencyGroup, data = data,
     col = c("lightblue", "pink"))
 ```
 ```{r}
-```{r}
 boxplot(Housing_Risk ~ ProficiencyGroup_POC, data = data, 
         main = "Housing Risk by People of Colour",
         xlab = "Percent of People of Colour", ylab = "Housing Risk",
