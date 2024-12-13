@@ -211,6 +211,7 @@ kable(borough_summary,
       digits = 2) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 
+
 ```
 
 
@@ -219,7 +220,7 @@ kable(borough_summary,
 
 ```{r}
 # 4. Rent burden analysis
-rent_burden <- ggplot(nyc_evictions, aes(x = borough_full, y = `rent-burden`, fill = borough_simple)) +
+rent_burden <- ggplot(nyc_evictions, aes(x = borough_simple, y = `rent-burden`, fill = borough_simple)) +
   geom_boxplot() +
   theme_minimal() +
   labs(title = "Rent Burden Distribution by Borough",
